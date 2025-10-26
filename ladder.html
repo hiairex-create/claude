@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사다리타기 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .setup-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-row input {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-row input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .ladder-container {
+            position: relative;
+            overflow-x: auto;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .ladder-canvas-wrapper {
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            justify-content: center;
+        }
+
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .result-item .player {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .result-item .destination {
+            color: #764ba2;
+            font-weight: bold;
+        }
+
+        .settings-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .setting-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .setting-item input,
+        .setting-item select {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🪜 사다리타기 게임</h1>
+
+        <div class="setup-section">
+            <div class="input-group">
+                <label>참가자 이름 (2-8명)</label>
+                <div class="input-row" id="playersInput">
+                    <input type="text" placeholder="참가자 1" value="철수">
+                    <input type="text" placeholder="참가자 2" value="영희">
+                    <input type="text" placeholder="참가자 3" value="민수">
+                    <input type="text" placeholder="참가자 4" value="지영">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>결과 항목 (참가자 수와 동일해야 함)</label>
+                <div class="input-row" id="destinationsInput">
+                    <input type="text" placeholder="항목 1" value="당첨">
+                    <input type="text" placeholder="항목 2" value="꽝">
+                    <input type="text" placeholder="항목 3" value="선물">
+                    <input type="text" placeholder="항목 4" value="커피">
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <div class="setting-item">
+                    <label>사다리 높이</label>
+                    <input type="number" id="ladderHeight" value="10" min="5" max="20">
+                </div>
+                <div class="setting-item">
+                    <label>가로선 밀도</label>
+                    <select id="rungDensity">
+                        <option value="low">낮음</option>
+                        <option value="medium" selected>보통</option>
+                        <option value="high">높음</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="generateLadder()">사다리 생성</button>
+            <button class="btn-success" onclick="startAnimation()" id="startBtn" disabled>결과 확인</button>
+            <button class="btn-secondary" onclick="reset()">초기화</button>
+        </div>
+
+        <div class="ladder-container">
+            <div class="ladder-canvas-wrapper">
+                <canvas id="ladderCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="results" id="results">
+            <h2>🎉 결과</h2>
+            <div id="resultsList"></div>
+        </div>
+
+        <p class="info-text">참가자와 항목을 입력한 후 '사다리 생성'을 클릭하세요</p>
+    </div>
+
+    <script>
+        let canvas, ctx;
+        let players = [];
+        let destinations = [];
+        let ladderData = [];
+        let ladderHeight = 10;
+        let animating = false;
+
+        const CANVAS_PADDING = 40;
+        const LINE_SPACING = 100;
+        const RUNG_HEIGHT = 40;
+
+        function init() {
+            canvas = document.getElementById('ladderCanvas');
+            ctx = canvas.getContext('2d');
+        }
+
+        function getPlayerNames() {
+            const inputs = document.querySelectorAll('#playersInput input');
+            return Array.from(inputs)
+                .map(input => input.value.trim())
+                .filter(name => name.length > 0);
+        }
+
+        function getDestinationNames() {
+            const inputs = document.querySelectorAll('#destinationsInput input');
+            return Array.from(inputs)
+                .map(input => input.value.trim())
+                .filter(name => name.length > 0);
+        }
+
+        function generateLadder() {
+            players = getPlayerNames();
+            destinations = getDestinationNames();
+
+            if (players.length < 2 || players.length > 8) {
+                alert('참가자는 2명에서 8명 사이여야 합니다.');
+                return;
+            }
+
+            if (players.length !== destinations.length) {
+                alert('참가자 수와 결과 항목 수가 같아야 합니다.');
+                return;
+            }
+
+            ladderHeight = parseInt(document.getElementById('ladderHeight').value);
+            const density = document.getElementById('rungDensity').value;
+
+            // Generate ladder structure
+            const numLines = players.length;
+            ladderData = [];
+
+            // Initialize ladder with empty rungs
+            for (let i = 0; i < ladderHeight; i++) {
+                ladderData[i] = new Array(numLines - 1).fill(false);
+            }
+
+            // Add horizontal rungs based on density
+            let rungCount;
+            switch(density) {
+                case 'low':
+                    rungCount = Math.floor(ladderHeight * (numLines - 1) * 0.3);
+                    break;
+                case 'high':
+                    rungCount = Math.floor(ladderHeight * (numLines - 1) * 0.6);
+                    break;
+                default:
+                    rungCount = Math.floor(ladderHeight * (numLines - 1) * 0.45);
+            }
+
+            // Randomly place rungs ensuring no adjacent rungs on same level
+            for (let i = 0; i < rungCount; i++) {
+                let row, col;
+                let attempts = 0;
+                do {
+                    row = Math.floor(Math.random() * ladderHeight);
+                    col = Math.floor(Math.random() * (numLines - 1));
+                    attempts++;
+                } while (
+                    (ladderData[row][col] ||
+                    (col > 0 && ladderData[row][col - 1]) ||
+                    (col < numLines - 2 && ladderData[row][col + 1])) &&
+                    attempts < 100
+                );
+
+                if (attempts < 100) {
+                    ladderData[row][col] = true;
+                }
+            }
+
+            drawLadder();
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('results').classList.remove('show');
+        }
+
+        function drawLadder() {
+            const numLines = players.length;
+            const canvasWidth = LINE_SPACING * (numLines - 1) + CANVAS_PADDING * 2;
+            const canvasHeight = RUNG_HEIGHT * ladderHeight + CANVAS_PADDING * 2 + 60;
+
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw vertical lines
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            for (let i = 0; i < numLines; i++) {
+                const x = CANVAS_PADDING + i * LINE_SPACING;
+                ctx.beginPath();
+                ctx.moveTo(x, CANVAS_PADDING + 30);
+                ctx.lineTo(x, canvas.height - CANVAS_PADDING - 30);
+                ctx.stroke();
+            }
+
+            // Draw horizontal rungs
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            for (let row = 0; row < ladderHeight; row++) {
+                for (let col = 0; col < numLines - 1; col++) {
+                    if (ladderData[row][col]) {
+                        const x1 = CANVAS_PADDING + col * LINE_SPACING;
+                        const x2 = CANVAS_PADDING + (col + 1) * LINE_SPACING;
+                        const y = CANVAS_PADDING + 30 + row * RUNG_HEIGHT + RUNG_HEIGHT / 2;
+
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y);
+                        ctx.lineTo(x2, y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw player names at top
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            for (let i = 0; i < players.length; i++) {
+                const x = CANVAS_PADDING + i * LINE_SPACING;
+                ctx.fillText(players[i], x, CANVAS_PADDING + 15);
+            }
+
+            // Draw destinations at bottom
+            ctx.fillStyle = '#764ba2';
+            for (let i = 0; i < destinations.length; i++) {
+                const x = CANVAS_PADDING + i * LINE_SPACING;
+                ctx.fillText(destinations[i], x, canvas.height - CANVAS_PADDING + 20);
+            }
+        }
+
+        function tracePath(startCol) {
+            const path = [{x: startCol, y: 0}];
+            let currentCol = startCol;
+
+            for (let row = 0; row < ladderHeight; row++) {
+                // Check if there's a rung to the left
+                if (currentCol > 0 && ladderData[row][currentCol - 1]) {
+                    currentCol--;
+                }
+                // Check if there's a rung to the right
+                else if (currentCol < players.length - 1 && ladderData[row][currentCol]) {
+                    currentCol++;
+                }
+
+                path.push({x: currentCol, y: row + 1});
+            }
+
+            return path;
+        }
+
+        async function startAnimation() {
+            if (animating) return;
+            animating = true;
+            document.getElementById('startBtn').disabled = true;
+
+            const results = [];
+
+            for (let i = 0; i < players.length; i++) {
+                const path = tracePath(i);
+                await animatePath(path, i);
+                results.push({
+                    player: players[i],
+                    destination: destinations[path[path.length - 1].x]
+                });
+            }
+
+            displayResults(results);
+            animating = false;
+        }
+
+        function animatePath(path, playerIndex) {
+            return new Promise(resolve => {
+                let step = 0;
+                const color = `hsl(${playerIndex * 360 / players.length}, 70%, 50%)`;
+
+                const interval = setInterval(() => {
+                    if (step >= path.length - 1) {
+                        clearInterval(interval);
+                        resolve();
+                        return;
+                    }
+
+                    const start = path[step];
+                    const end = path[step + 1];
+
+                    const x1 = CANVAS_PADDING + start.x * LINE_SPACING;
+                    const y1 = CANVAS_PADDING + 30 + start.y * RUNG_HEIGHT;
+                    const x2 = CANVAS_PADDING + end.x * LINE_SPACING;
+                    const y2 = CANVAS_PADDING + 30 + end.y * RUNG_HEIGHT;
+
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+
+                    // Draw a circle at current position
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(x2, y2, 6, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    step++;
+                }, 200);
+            });
+        }
+
+        function displayResults(results) {
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+
+            results.forEach((result, index) => {
+                setTimeout(() => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    item.innerHTML = `
+                        <span class="player">${result.player}</span>
+                        <span>→</span>
+                        <span class="destination">${result.destination}</span>
+                    `;
+                    resultsList.appendChild(item);
+                }, index * 200);
+            });
+
+            document.getElementById('results').classList.add('show');
+        }
+
+        function reset() {
+            drawLadder();
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('startBtn').disabled = false;
+            animating = false;
+        }
+
+        // Initialize on load
+        window.onload = init;
+    </script>
+</body>
+</html>
