@@ -466,20 +466,32 @@
         }
 
         function tracePath(startCol) {
-            const path = [{x: startCol, y: 0}];
+            const path = [];
             let currentCol = startCol;
+            let currentRow = 0;
+
+            path.push({x: currentCol, y: currentRow, type: 'start'});
 
             for (let row = 0; row < ladderHeight; row++) {
+                // Move down to the next row level first
+                const nextRowY = row + 0.5; // Middle of the row (where rungs are)
+                path.push({x: currentCol, y: nextRowY, type: 'vertical'});
+
                 // Check if there's a rung to the left
                 if (currentCol > 0 && ladderData[row][currentCol - 1]) {
-                    currentCol--;
+                    const newCol = currentCol - 1;
+                    path.push({x: newCol, y: nextRowY, type: 'horizontal'});
+                    currentCol = newCol;
                 }
                 // Check if there's a rung to the right
                 else if (currentCol < players.length - 1 && ladderData[row][currentCol]) {
-                    currentCol++;
+                    const newCol = currentCol + 1;
+                    path.push({x: newCol, y: nextRowY, type: 'horizontal'});
+                    currentCol = newCol;
                 }
 
-                path.push({x: currentCol, y: row + 1});
+                // Move down to the bottom of this row
+                path.push({x: currentCol, y: row + 1, type: 'vertical'});
             }
 
             return path;
