@@ -507,39 +507,135 @@
 
         function animatePath(path, playerIndex) {
             return new Promise(resolve => {
-                let step = 0;
                 const color = `hsl(${playerIndex * 360 / players.length}, 70%, 50%)`;
 
-                const interval = setInterval(() => {
-                    if (step >= path.length - 1) {
-                        clearInterval(interval);
+                // First, draw the complete path
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.globalAlpha = 0.3;
+                ctx.beginPath();
+
+                for (let i = 0; i < path.length; i++) {
+                    const x = CANVAS_PADDING + path[i].x * LINE_SPACING;
+                    const y = CANVAS_PADDING + 30 + path[i].y * RUNG_HEIGHT;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+
+                // Now animate a ball moving along the path
+                let segmentIndex = 0;
+                let progress = 0;
+                const speed = 0.08; // How fast the ball moves (0-1)
+                const ballRadius = 8;
+
+                function animate() {
+                    if (segmentIndex >= path.length - 1) {
+                        // Draw final position
+                        const finalX = CANVAS_PADDING + path[path.length - 1].x * LINE_SPACING;
+                        const finalY = CANVAS_PADDING + 30 + path[path.length - 1].y * RUNG_HEIGHT;
+
+                        // Draw trail
+                        ctx.strokeStyle = color;
+                        ctx.lineWidth = 4;
+                        ctx.globalAlpha = 1.0;
+                        ctx.beginPath();
+                        for (let i = 0; i < path.length; i++) {
+                            const x = CANVAS_PADDING + path[i].x * LINE_SPACING;
+                            const y = CANVAS_PADDING + 30 + path[i].y * RUNG_HEIGHT;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.stroke();
+
+                        // Draw final ball
+                        ctx.fillStyle = color;
+                        ctx.shadowBlur = 15;
+                        ctx.shadowColor = color;
+                        ctx.beginPath();
+                        ctx.arc(finalX, finalY, ballRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+
                         resolve();
                         return;
                     }
 
-                    const start = path[step];
-                    const end = path[step + 1];
+                    const start = path[segmentIndex];
+                    const end = path[segmentIndex + 1];
 
                     const x1 = CANVAS_PADDING + start.x * LINE_SPACING;
                     const y1 = CANVAS_PADDING + 30 + start.y * RUNG_HEIGHT;
                     const x2 = CANVAS_PADDING + end.x * LINE_SPACING;
                     const y2 = CANVAS_PADDING + 30 + end.y * RUNG_HEIGHT;
 
+                    // Interpolate position
+                    const currentX = x1 + (x2 - x1) * progress;
+                    const currentY = y1 + (y2 - y1) * progress;
+
+                    // Redraw the ladder to clear previous frame
+                    drawLadder();
+
+                    // Redraw paths of previous players
+                    for (let p = 0; p < playerIndex; p++) {
+                        const prevPath = tracePath(p);
+                        const prevColor = `hsl(${p * 360 / players.length}, 70%, 50%)`;
+                        ctx.strokeStyle = prevColor;
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        for (let i = 0; i < prevPath.length; i++) {
+                            const x = CANVAS_PADDING + prevPath[i].x * LINE_SPACING;
+                            const y = CANVAS_PADDING + 30 + prevPath[i].y * RUNG_HEIGHT;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.stroke();
+                    }
+
+                    // Draw the trail up to current position
                     ctx.strokeStyle = color;
                     ctx.lineWidth = 4;
                     ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
+                    for (let i = 0; i <= segmentIndex; i++) {
+                        const x = CANVAS_PADDING + path[i].x * LINE_SPACING;
+                        const y = CANVAS_PADDING + 30 + path[i].y * RUNG_HEIGHT;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.lineTo(currentX, currentY);
                     ctx.stroke();
 
-                    // Draw a circle at current position
+                    // Draw the moving ball with glow effect
                     ctx.fillStyle = color;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = color;
                     ctx.beginPath();
-                    ctx.arc(x2, y2, 6, 0, Math.PI * 2);
+                    ctx.arc(currentX, currentY, ballRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    // Draw inner white circle for depth
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(currentX - 2, currentY - 2, ballRadius * 0.4, 0, Math.PI * 2);
                     ctx.fill();
 
-                    step++;
-                }, 200);
+                    // Update progress
+                    progress += speed;
+                    if (progress >= 1) {
+                        progress = 0;
+                        segmentIndex++;
+                    }
+
+                    requestAnimationFrame(animate);
+                }
+
+                animate();
             });
         }
 
