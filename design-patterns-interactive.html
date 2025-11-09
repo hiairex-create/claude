@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>디자인 패턴 배우기: Factory Method & Singleton</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            animation: fadeInDown 1s;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 60px;
+            animation: fadeInUp 0.8s;
+        }
+
+        .section-title {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .description {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+
+        .demo-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-car {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-doll {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-sun {
+            background: linear-gradient(135deg, #ffd89b 0%, #ffa500 100%);
+            color: white;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #a8a8a8 0%, #636363 100%);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .output-area {
+            background: white;
+            min-height: 200px;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px dashed #667eea;
+        }
+
+        .toy-item {
+            display: inline-block;
+            padding: 15px 25px;
+            margin: 10px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            animation: popIn 0.5s;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .toy-car {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .toy-doll {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .sun-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 250px;
+            position: relative;
+        }
+
+        .sun {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, #ffd700 0%, #ff8c00 100%);
+            border-radius: 50%;
+            position: relative;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.8);
+        }
+
+        .sun::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: inherit;
+            animation: rotate 10s linear infinite;
+        }
+
+        .sun-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #8b4513;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .attempt-counter {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.3em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .code-box {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .code-box .keyword {
+            color: #c678dd;
+        }
+
+        .code-box .string {
+            color: #98c379;
+        }
+
+        .code-box .comment {
+            color: #5c6370;
+            font-style: italic;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 1.1em;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .analogy-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .analogy-box h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .key-points {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .key-points h3 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+
+        .key-points ul {
+            margin-left: 20px;
+        }
+
+        .key-points li {
+            margin: 8px 0;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .section-title {
+                font-size: 1.5em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            button {
+                padding: 12px 20px;
+                font-size: 1em;
+            }
+        }
+
+        .info-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-size: 0.8em;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #28a745;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s, slideOut 0.5s 2.5s;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>디자인 패턴 배우기</h1>
+            <p>Factory Method 패턴과 Singleton 패턴을 쉽고 재미있게 이해해봐요!</p>
+        </header>
+
+        <div class="content">
+            <!-- 생성 패턴 소개 -->
+            <section class="section">
+                <h2 class="section-title">생성 패턴이란?</h2>
+                <div class="description">
+                    <p>생성 패턴은 <strong>객체를 어떻게 만들지</strong>에 대한 똑똑한 방법입니다. 프로그램에서 객체를 그냥 마구 만들면 나중에 코드를 고치기 어려워요. 생성 패턴을 사용하면 객체를 만드는 과정을 잘 정리해서, 코드를 깔끔하고 유지보수하기 쉽게 만들 수 있어요!</p>
+                </div>
+            </section>
+
+            <!-- Factory Method 패턴 -->
+            <section class="section">
+                <h2 class="section-title">Factory Method 패턴</h2>
+
+                <div class="description">
+                    <h3>무엇인가요?</h3>
+                    <p>Factory Method 패턴은 <strong>공장(Factory)</strong>이 물건을 만들듯이, 객체를 만드는 전담 메서드를 두는 패턴입니다. 우리가 직접 객체를 만들지 않고, 공장에게 "이거 하나 만들어줘!"라고 부탁하면 공장이 알아서 만들어줍니다.</p>
+                </div>
+
+                <div class="analogy-box">
+                    <h3>실생활 비유</h3>
+                    <p><strong>케이크 가게</strong>를 생각해보세요. 생일 케이크가 필요할 때, 직접 밀가루와 설탕을 사서 만들 수도 있지만, 케이크 가게에 주문하면 편리하죠? 가게는 케이크 만드는 방법을 알고 있고, 우리는 그냥 주문만 하면 됩니다. 새로운 맛의 케이크가 나와도 가게만 레시피를 업데이트하면 되고, 손님은 똑같이 주문하면 돼요!</p>
+                </div>
+
+                <div class="key-points">
+                    <h3>왜 사용할까요?</h3>
+                    <ul>
+                        <li><strong>코드를 한 곳에서 관리:</strong> 객체 만드는 코드가 여기저기 흩어지지 않아요</li>
+                        <li><strong>쉬운 수정:</strong> 객체 생성 방식이 바뀌어도 공장만 고치면 돼요</li>
+                        <li><strong>새로운 종류 추가가 쉬움:</strong> 새로운 장난감이 추가되어도 간단해요</li>
+                    </ul>
+                </div>
+
+                <div class="demo-box">
+                    <h3 style="margin-bottom: 20px;">인터랙티브 데모: 장난감 공장</h3>
+                    <p>버튼을 눌러서 장난감 공장에 주문해보세요!</p>
+
+                    <div class="button-group">
+                        <button class="btn-car" onclick="createToy('car')">자동차 장난감 만들기</button>
+                        <button class="btn-doll" onclick="createToy('doll')">인형 장난감 만들기</button>
+                        <button class="btn-reset" onclick="resetToys()">초기화</button>
+                    </div>
+
+                    <div class="output-area" id="toyOutput">
+                        <p style="text-align: center; color: #999;">아직 만들어진 장난감이 없어요. 위 버튼을 눌러서 주문해보세요!</p>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 10px;">
+                        <strong>설명:</strong> 버튼을 누르면 <code>ToyFactory.create_toy()</code> 메서드가 실행되어 해당 장난감 객체를 만들어냅니다. 우리는 장난감이 어떻게 만들어지는지 몰라도 되고, 그냥 공장에 주문하기만 하면 돼요!
+                    </div>
+                </div>
+
+                <div class="code-box">
+<span class="comment"># 파이썬 코드 예제</span>
+<span class="keyword">class</span> ToyFactory:
+    <span class="keyword">def</span> create_toy(self, toy_type):
+        <span class="comment"># 요청된 종류에 따라 알맞은 장난감 생성</span>
+        <span class="keyword">if</span> toy_type == <span class="string">"car"</span>:
+            <span class="keyword">return</span> CarToy()
+        <span class="keyword">elif</span> toy_type == <span class="string">"doll"</span>:
+            <span class="keyword">return</span> DollToy()
+
+<span class="comment"># 사용 예시</span>
+factory = ToyFactory()
+toy1 = factory.create_toy(<span class="string">"car"</span>)   <span class="comment"># 자동차 생성!</span>
+toy2 = factory.create_toy(<span class="string">"doll"</span>)  <span class="comment"># 인형 생성!</span>
+                </div>
+            </section>
+
+            <!-- Singleton 패턴 -->
+            <section class="section">
+                <h2 class="section-title">Singleton 패턴</h2>
+
+                <div class="description">
+                    <h3>무엇인가요?</h3>
+                    <p>Singleton 패턴은 <strong>오직 하나의 객체만</strong> 만들도록 보장하는 패턴입니다. 여러 번 만들려고 해도 항상 같은 객체를 돌려받아요. 프로그램 전체에서 하나의 객체를 공유해서 사용합니다.</p>
+                </div>
+
+                <div class="analogy-box">
+                    <h3>실생활 비유</h3>
+                    <p><strong>태양</strong>을 생각해보세요. 하늘에는 태양이 하나만 있죠? 지구상의 모든 생물이 그 하나의 태양을 공유합니다. 또는 <strong>학교의 교장선생님</strong>처럼, 한 학교에 교장선생님은 한 분만 계십니다. 여러 명이 있으면 지시가 엇갈려서 혼란스러울 거예요. Singleton도 이처럼 딱 하나만 있어야 하는 것을 표현할 때 사용해요!</p>
+                </div>
+
+                <div class="key-points">
+                    <h3>왜 사용할까요?</h3>
+                    <ul>
+                        <li><strong>일관성 유지:</strong> 모두가 같은 객체를 보니까 데이터가 일치해요</li>
+                        <li><strong>자원 절약:</strong> 매번 새로 만들지 않으니 메모리를 아껴요</li>
+                        <li><strong>충돌 방지:</strong> 설정 관리자가 여러 개면 설정이 꼬일 수 있어요</li>
+                    </ul>
+                </div>
+
+                <div class="demo-box">
+                    <h3 style="margin-bottom: 20px;">인터랙티브 데모: 태양은 하나!</h3>
+                    <p>버튼을 여러 번 눌러서 태양을 만들어보세요. 몇 번을 눌러도 태양은 하나만 있어요!</p>
+
+                    <div class="button-group">
+                        <button class="btn-sun" onclick="createSun()">태양 만들기</button>
+                        <button class="btn-reset" onclick="resetSun()">초기화</button>
+                    </div>
+
+                    <div class="output-area">
+                        <div class="sun-container" id="sunContainer">
+                            <p style="text-align: center; color: #999;">버튼을 눌러 태양을 만들어보세요!</p>
+                        </div>
+                        <div class="attempt-counter" id="sunCounter">생성 시도: 0번</div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 10px;">
+                        <strong>설명:</strong> 버튼을 여러 번 눌러도 태양은 하나만 생성됩니다. 이것이 Singleton 패턴의 핵심이에요! <code>Sun()</code>을 몇 번을 호출해도 항상 같은 객체를 반환합니다.
+                    </div>
+                </div>
+
+                <div class="code-box">
+<span class="comment"># 파이썬 코드 예제</span>
+<span class="keyword">class</span> Sun:
+    _instance = <span class="keyword">None</span>  <span class="comment"># 유일한 인스턴스를 저장</span>
+
+    <span class="keyword">def</span> __new__(cls):
+        <span class="keyword">if</span> cls._instance <span class="keyword">is None</span>:
+            cls._instance = <span class="keyword">super</span>(Sun, cls).__new__(cls)
+        <span class="keyword">return</span> cls._instance
+
+<span class="comment"># 사용 예시</span>
+sun1 = Sun()
+sun2 = Sun()
+<span class="keyword">print</span>(sun1 <span class="keyword">is</span> sun2)  <span class="comment"># True - 같은 객체!</span>
+                </div>
+            </section>
+
+            <!-- 비교 섹션 -->
+            <section class="section">
+                <h2 class="section-title">두 패턴 비교하기</h2>
+
+                <div class="description">
+                    <p>Factory Method와 Singleton은 둘 다 생성 패턴이지만, 해결하는 문제가 달라요!</p>
+                </div>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>Factory Method 패턴</th>
+                            <th>Singleton 패턴</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>주요 목적</strong></td>
+                            <td>객체를 <strong>어떻게</strong> 만들지</td>
+                            <td>객체를 <strong>몇 개</strong> 만들지 (하나만!)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>초점</strong></td>
+                            <td>생성 방식의 유연성</td>
+                            <td>유일한 인스턴스 보장</td>
+                        </tr>
+                        <tr>
+                            <td><strong>사용 상황</strong></td>
+                            <td>여러 종류의 객체를 만들 때</td>
+                            <td>하나만 있어야 하는 객체</td>
+                        </tr>
+                        <tr>
+                            <td><strong>예시</strong></td>
+                            <td>장난감 공장, 케이크 가게</td>
+                            <td>태양, 교장선생님, 설정 관리자</td>
+                        </tr>
+                        <tr>
+                            <td><strong>장점</strong></td>
+                            <td>확장 쉬움, 코드 중앙관리</td>
+                            <td>일관성 유지, 자원 절약</td>
+                        </tr>
+                        <tr>
+                            <td><strong>객체 개수</strong></td>
+                            <td>여러 개 생성 가능</td>
+                            <td>항상 하나만</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="key-points" style="margin-top: 30px;">
+                    <h3>핵심 정리</h3>
+                    <ul>
+                        <li><strong>공통점:</strong> 둘 다 객체 생성을 다루는 패턴이고, 코드를 깔끔하게 만들어요</li>
+                        <li><strong>Factory Method:</strong> "공장에서 주문해!" - 다양한 객체를 체계적으로 만들기</li>
+                        <li><strong>Singleton:</strong> "하나만 있어!" - 전역적으로 유일한 객체 보장</li>
+                        <li><strong>함께 사용:</strong> 두 패턴은 서로 대체되는 게 아니라, 상황에 따라 함께 사용할 수도 있어요!</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 추가 학습 자료 -->
+            <section class="section">
+                <h2 class="section-title">더 알아보기</h2>
+                <div class="description">
+                    <h3>언제 사용하면 좋을까요?</h3>
+                    <p><strong>Factory Method를 사용하세요:</strong></p>
+                    <ul style="margin-left: 30px; margin-top: 10px;">
+                        <li>비슷한 종류의 객체를 여러 개 만들어야 할 때</li>
+                        <li>객체 생성 로직이 복잡하거나 자주 바뀔 때</li>
+                        <li>새로운 타입을 추가하기 쉽게 만들고 싶을 때</li>
+                    </ul>
+
+                    <p style="margin-top: 20px;"><strong>Singleton을 사용하세요:</strong></p>
+                    <ul style="margin-left: 30px; margin-top: 10px;">
+                        <li>설정 관리, 로그 기록처럼 하나만 있어야 하는 것</li>
+                        <li>여러 곳에서 같은 데이터를 공유해야 할 때</li>
+                        <li>자원을 아끼고 싶을 때 (데이터베이스 연결 등)</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Factory Method 패턴 구현
+        let toyCount = 0;
+
+        function createToy(type) {
+            toyCount++;
+            const outputArea = document.getElementById('toyOutput');
+
+            // 첫 생성이면 안내 메시지 제거
+            if (toyCount === 1) {
+                outputArea.innerHTML = '';
+            }
+
+            const toyDiv = document.createElement('div');
+            toyDiv.className = 'toy-item';
+
+            if (type === 'car') {
+                toyDiv.classList.add('toy-car');
+                toyDiv.innerHTML = `🚗 장난감 자동차 #${toyCount}`;
+                showToast('자동차 장난감이 만들어졌어요!');
+            } else if (type === 'doll') {
+                toyDiv.classList.add('toy-doll');
+                toyDiv.innerHTML = `🧸 장난감 인형 #${toyCount}`;
+                showToast('인형 장난감이 만들어졌어요!');
+            }
+
+            outputArea.appendChild(toyDiv);
+        }
+
+        function resetToys() {
+            toyCount = 0;
+            const outputArea = document.getElementById('toyOutput');
+            outputArea.innerHTML = '<p style="text-align: center; color: #999;">아직 만들어진 장난감이 없어요. 위 버튼을 눌러서 주문해보세요!</p>';
+            showToast('초기화되었습니다!');
+        }
+
+        // Singleton 패턴 구현
+        let sunInstance = null;
+        let sunAttempts = 0;
+
+        function createSun() {
+            sunAttempts++;
+            const sunContainer = document.getElementById('sunContainer');
+            const counterDiv = document.getElementById('sunCounter');
+
+            counterDiv.textContent = `생성 시도: ${sunAttempts}번`;
+
+            if (sunInstance === null) {
+                // 처음 생성
+                sunContainer.innerHTML = `
+                    <div class="sun">
+                        <div class="sun-label">태양<br>#1</div>
+                    </div>
+                `;
+                sunInstance = true;
+                showToast('태양이 생성되었어요! (처음)');
+            } else {
+                // 이미 존재 - 같은 것 반환
+                showToast(`태양은 이미 있어요! (${sunAttempts}번째 시도)`);
+                // 살짝 흔들기 효과
+                const sun = sunContainer.querySelector('.sun');
+                sun.style.animation = 'none';
+                setTimeout(() => {
+                    sun.style.animation = 'pulse 2s infinite';
+                }, 10);
+            }
+        }
+
+        function resetSun() {
+            sunInstance = null;
+            sunAttempts = 0;
+            const sunContainer = document.getElementById('sunContainer');
+            const counterDiv = document.getElementById('sunCounter');
+
+            sunContainer.innerHTML = '<p style="text-align: center; color: #999;">버튼을 눌러 태양을 만들어보세요!</p>';
+            counterDiv.textContent = '생성 시도: 0번';
+            showToast('초기화되었습니다!');
+        }
+
+        // Toast 알림 표시
+        function showToast(message) {
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // 페이지 로드 시 환영 메시지
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                showToast('디자인 패턴 학습을 시작해봐요! 🎉');
+            }, 500);
+        });
+    </script>
+</body>
+</html>
