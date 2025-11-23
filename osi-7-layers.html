@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSI 7계층 모델 - 인터렉티브 가이드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .layers-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideInLeft 0.8s ease-out;
+        }
+
+        .layer {
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 5px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .layer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .layer:hover::before {
+            left: 100%;
+        }
+
+        .layer:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .layer.active {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .layer-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .layer-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .layer-subtitle {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* Layer Colors */
+        .layer-7 {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            border-left-color: #C92A2A;
+            color: white;
+        }
+
+        .layer-6 {
+            background: linear-gradient(135deg, #FFA94D, #FFC078);
+            border-left-color: #D9480F;
+            color: white;
+        }
+
+        .layer-5 {
+            background: linear-gradient(135deg, #FFD93D, #FFE566);
+            border-left-color: #F59F00;
+            color: #333;
+        }
+
+        .layer-4 {
+            background: linear-gradient(135deg, #6BCF7F, #8CE99A);
+            border-left-color: #2F9E44;
+            color: white;
+        }
+
+        .layer-3 {
+            background: linear-gradient(135deg, #4DABF7, #74C0FC);
+            border-left-color: #1971C2;
+            color: white;
+        }
+
+        .layer-2 {
+            background: linear-gradient(135deg, #748FFC, #91A7FF);
+            border-left-color: #4263EB;
+            color: white;
+        }
+
+        .layer-1 {
+            background: linear-gradient(135deg, #B197FC, #C5B3FC);
+            border-left-color: #7950F2;
+            color: white;
+        }
+
+        .info-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideInRight 0.8s ease-out;
+            min-height: 600px;
+        }
+
+        .info-content {
+            display: none;
+        }
+
+        .info-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .info-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .info-content h3 {
+            color: #764ba2;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .info-content p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .protocol-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .protocol-tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .example-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .data-flow {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .data-flow h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .flow-animation {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 30px;
+            position: relative;
+        }
+
+        .flow-step {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            min-width: 150px;
+            transition: all 0.3s ease;
+        }
+
+        .flow-step:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .flow-arrow {
+            font-size: 2em;
+            color: #667eea;
+            animation: pulse 2s infinite;
+        }
+
+        .start-animation-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .start-animation-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .data-packet {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #FF6B6B;
+            border-radius: 50%;
+            animation: movePacket 3s infinite;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes movePacket {
+            0% {
+                left: 0;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                left: 100%;
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .flow-animation {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        .default-info {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .default-info h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .default-info p {
+            font-size: 1.1em;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .layer-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 OSI 7계층 모델</h1>
+            <p>네트워크 통신의 핵심 개념을 인터렉티브하게 배워보세요</p>
+        </header>
+
+        <div class="main-content">
+            <div class="layers-container">
+                <div class="layer layer-7" data-layer="7">
+                    <span class="layer-icon">💻</span>
+                    <span class="layer-number">7</span>
+                    <div style="display: inline-block;">
+                        <div class="layer-name">응용 계층</div>
+                        <div class="layer-subtitle">Application Layer</div>
+                    </div>
+                </div>
+
+                <div class="layer layer-6" data-layer="6">
+                    <span class="layer-icon">🔄</span>
+                    <span class="layer-number">6</span>
+                    <div style="display: inline-block;">
+                        <div class="layer-name">표현 계층</div>
+                        <div class="layer-subtitle">Presentation Layer</div>
+                    </div>
+                </div>
+
+                <div class="layer layer-5" data-layer="5">
+                    <span class="layer-icon">🔗</span>
+                    <span class="layer-number">5</span>
+                    <div style="display: inline-block;">
+                        <div class="layer-name">세션 계층</div>
+                        <div class="layer-subtitle">Session Layer</div>
+                    </div>
+                </div>
+
+                <div class="layer layer-4" data-layer="4">
+                    <span class="layer-icon">🚚</span>
+                    <span class="layer-number">4</span>
+                    <div style="display: inline-block;">
+                        <div class="layer-name">전송 계층</div>
+                        <div class="layer-subtitle">Transport Layer</div>
+                    </div>
+                </div>
+
+                <div class="layer layer-3" data-layer="3">
+                    <span class="layer-icon">🗺️</span>
+                    <span class="layer-number">3</span>
+                    <div style="display: inline-block;">
+                        <div class="layer-name">네트워크 계층</div>
+                        <div class="layer-subtitle">Network Layer</div>
+                    </div>
+                </div>
+
+                <div class="layer layer-2" data-layer="2">
+                    <span class="layer-icon">📡</span>
+                    <span class="layer-number">2</span>
+                    <div style="display: inline-block;">
+                        <div class="layer-name">데이터 링크 계층</div>
+                        <div class="layer-subtitle">Data Link Layer</div>
+                    </div>
+                </div>
+
+                <div class="layer layer-1" data-layer="1">
+                    <span class="layer-icon">⚡</span>
+                    <span class="layer-number">1</span>
+                    <div style="display: inline-block;">
+                        <div class="layer-name">물리 계층</div>
+                        <div class="layer-subtitle">Physical Layer</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-content default-info active" id="info-default">
+                    <h2>👋 OSI 7계층 모델에 오신 것을 환영합니다!</h2>
+                    <p>왼쪽의 각 계층을 클릭하여 자세한 정보를 확인해보세요.</p>
+                    <p>OSI(Open Systems Interconnection) 모델은 네트워크 통신을 7개의 논리적 계층으로 나눈 표준 모델입니다.</p>
+                    <p>각 계층은 특정한 기능을 담당하며, 계층화를 통해 복잡한 네트워크 통신을 이해하기 쉽게 만듭니다.</p>
+                </div>
+
+                <div class="info-content" id="info-7">
+                    <h2>💻 응용 계층 (Application Layer)</h2>
+                    <p>사용자와 가장 가까운 계층으로, 사용자가 직접 상호작용하는 응용 프로그램들이 동작하는 계층입니다.</p>
+
+                    <h3>주요 기능</h3>
+                    <div class="example-box">
+                        <p>✅ 사용자 인터페이스 제공</p>
+                        <p>✅ 네트워크 서비스 제공 (이메일, 파일 전송, 웹 브라우징)</p>
+                        <p>✅ 응용 프로그램 간 데이터 교환</p>
+                    </div>
+
+                    <h3>대표 프로토콜</h3>
+                    <div class="protocol-list">
+                        <span class="protocol-tag">HTTP/HTTPS</span>
+                        <span class="protocol-tag">FTP</span>
+                        <span class="protocol-tag">SMTP</span>
+                        <span class="protocol-tag">DNS</span>
+                        <span class="protocol-tag">SSH</span>
+                        <span class="protocol-tag">Telnet</span>
+                    </div>
+
+                    <h3>실생활 예시</h3>
+                    <div class="example-box">
+                        <p>🌐 웹 브라우저로 웹사이트 접속</p>
+                        <p>📧 이메일 프로그램으로 메일 송수신</p>
+                        <p>📁 FTP 클라이언트로 파일 전송</p>
+                    </div>
+                </div>
+
+                <div class="info-content" id="info-6">
+                    <h2>🔄 표현 계층 (Presentation Layer)</h2>
+                    <p>데이터의 형식을 변환하고, 암호화/복호화를 수행하는 계층입니다. 서로 다른 시스템 간의 데이터 표현 방식을 일치시킵니다.</p>
+
+                    <h3>주요 기능</h3>
+                    <div class="example-box">
+                        <p>✅ 데이터 형식 변환 (인코딩/디코딩)</p>
+                        <p>✅ 데이터 암호화 및 복호화</p>
+                        <p>✅ 데이터 압축 및 해제</p>
+                    </div>
+
+                    <h3>대표 프로토콜/포맷</h3>
+                    <div class="protocol-list">
+                        <span class="protocol-tag">SSL/TLS</span>
+                        <span class="protocol-tag">JPEG</span>
+                        <span class="protocol-tag">MPEG</span>
+                        <span class="protocol-tag">ASCII</span>
+                        <span class="protocol-tag">EBCDIC</span>
+                    </div>
+
+                    <h3>실생활 예시</h3>
+                    <div class="example-box">
+                        <p>🔐 HTTPS로 웹사이트 접속 시 SSL/TLS 암호화</p>
+                        <p>🖼️ 이미지 파일 포맷 변환 (PNG → JPEG)</p>
+                        <p>📦 파일 압축 (ZIP, GZ)</p>
+                    </div>
+                </div>
+
+                <div class="info-content" id="info-5">
+                    <h2>🔗 세션 계층 (Session Layer)</h2>
+                    <p>두 시스템 간의 대화(세션)를 관리하고 제어하는 계층입니다. 연결의 설정, 유지, 종료를 담당합니다.</p>
+
+                    <h3>주요 기능</h3>
+                    <div class="example-box">
+                        <p>✅ 세션 설정, 유지, 종료</p>
+                        <p>✅ 데이터 교환의 동기화</p>
+                        <p>✅ 대화 제어 (반이중, 전이중)</p>
+                    </div>
+
+                    <h3>대표 프로토콜</h3>
+                    <div class="protocol-list">
+                        <span class="protocol-tag">NetBIOS</span>
+                        <span class="protocol-tag">RPC</span>
+                        <span class="protocol-tag">PPTP</span>
+                        <span class="protocol-tag">SSH</span>
+                    </div>
+
+                    <h3>실생활 예시</h3>
+                    <div class="example-box">
+                        <p>🎮 온라인 게임 세션 유지</p>
+                        <p>💬 화상 회의 연결 관리</p>
+                        <p>🏦 인터넷 뱅킹 로그인 세션</p>
+                    </div>
+                </div>
+
+                <div class="info-content" id="info-4">
+                    <h2>🚚 전송 계층 (Transport Layer)</h2>
+                    <p>종단 간(End-to-End) 데이터 전송을 담당하며, 신뢰성 있는 데이터 전송을 보장합니다.</p>
+
+                    <h3>주요 기능</h3>
+                    <div class="example-box">
+                        <p>✅ 데이터 분할 및 재조립</p>
+                        <p>✅ 흐름 제어 및 오류 제어</p>
+                        <p>✅ 포트 번호를 통한 프로세스 식별</p>
+                        <p>✅ 연결 지향(TCP) 또는 비연결(UDP) 서비스</p>
+                    </div>
+
+                    <h3>대표 프로토콜</h3>
+                    <div class="protocol-list">
+                        <span class="protocol-tag">TCP</span>
+                        <span class="protocol-tag">UDP</span>
+                        <span class="protocol-tag">SCTP</span>
+                    </div>
+
+                    <h3>실생활 예시</h3>
+                    <div class="example-box">
+                        <p>📦 TCP: 파일 다운로드 시 데이터 무결성 보장</p>
+                        <p>🎥 UDP: 실시간 스트리밍 (YouTube, Netflix)</p>
+                        <p>🎮 UDP: 온라인 게임 (빠른 응답 속도 필요)</p>
+                    </div>
+                </div>
+
+                <div class="info-content" id="info-3">
+                    <h2>🗺️ 네트워크 계층 (Network Layer)</h2>
+                    <p>데이터를 목적지까지 안전하고 효율적으로 전달하기 위한 경로 설정(라우팅)을 담당합니다.</p>
+
+                    <h3>주요 기능</h3>
+                    <div class="example-box">
+                        <p>✅ 논리적 주소 지정 (IP 주소)</p>
+                        <p>✅ 라우팅 (최적 경로 결정)</p>
+                        <p>✅ 패킷 포워딩</p>
+                        <p>✅ 서로 다른 네트워크 간 통신</p>
+                    </div>
+
+                    <h3>대표 프로토콜</h3>
+                    <div class="protocol-list">
+                        <span class="protocol-tag">IP (IPv4/IPv6)</span>
+                        <span class="protocol-tag">ICMP</span>
+                        <span class="protocol-tag">ARP</span>
+                        <span class="protocol-tag">OSPF</span>
+                        <span class="protocol-tag">BGP</span>
+                    </div>
+
+                    <h3>실생활 예시</h3>
+                    <div class="example-box">
+                        <p>🌍 서울에서 뉴욕 서버로 데이터 전송 시 경로 설정</p>
+                        <p>📍 IP 주소를 통한 기기 식별</p>
+                        <p>🔍 라우터가 패킷의 최적 경로 결정</p>
+                    </div>
+                </div>
+
+                <div class="info-content" id="info-2">
+                    <h2>📡 데이터 링크 계층 (Data Link Layer)</h2>
+                    <p>직접 연결된 두 노드 간의 신뢰성 있는 데이터 전송을 담당합니다. 물리 계층의 오류를 감지하고 수정합니다.</p>
+
+                    <h3>주요 기능</h3>
+                    <div class="example-box">
+                        <p>✅ 물리적 주소 지정 (MAC 주소)</p>
+                        <p>✅ 프레임 구성</p>
+                        <p>✅ 오류 검출 및 수정</p>
+                        <p>✅ 흐름 제어</p>
+                        <p>✅ 매체 접근 제어 (MAC)</p>
+                    </div>
+
+                    <h3>대표 프로토콜/기술</h3>
+                    <div class="protocol-list">
+                        <span class="protocol-tag">Ethernet</span>
+                        <span class="protocol-tag">Wi-Fi (802.11)</span>
+                        <span class="protocol-tag">PPP</span>
+                        <span class="protocol-tag">HDLC</span>
+                        <span class="protocol-tag">MAC</span>
+                    </div>
+
+                    <h3>실생활 예시</h3>
+                    <div class="example-box">
+                        <p>🔌 이더넷 케이블로 연결된 PC와 라우터 간 통신</p>
+                        <p>📶 Wi-Fi 공유기와 스마트폰 간 무선 연결</p>
+                        <p>🏷️ MAC 주소를 통한 기기 식별</p>
+                    </div>
+                </div>
+
+                <div class="info-content" id="info-1">
+                    <h2>⚡ 물리 계층 (Physical Layer)</h2>
+                    <p>실제 물리적 매체를 통해 비트 스트림을 전송하는 계층입니다. 전기적, 기계적 특성을 정의합니다.</p>
+
+                    <h3>주요 기능</h3>
+                    <div class="example-box">
+                        <p>✅ 비트를 전기 신호로 변환</p>
+                        <p>✅ 물리적 연결 설정 및 유지</p>
+                        <p>✅ 전송 매체 및 토폴로지 정의</p>
+                        <p>✅ 데이터 전송률 결정</p>
+                    </div>
+
+                    <h3>대표 기술/장비</h3>
+                    <div class="protocol-list">
+                        <span class="protocol-tag">케이블 (UTP, 광섬유)</span>
+                        <span class="protocol-tag">허브</span>
+                        <span class="protocol-tag">리피터</span>
+                        <span class="protocol-tag">RS-232</span>
+                        <span class="protocol-tag">USB</span>
+                    </div>
+
+                    <h3>실생활 예시</h3>
+                    <div class="example-box">
+                        <p>🔌 랜 케이블을 통한 전기 신호 전송</p>
+                        <p>💡 광섬유를 통한 빛 신호 전송</p>
+                        <p>📡 무선 주파수를 통한 전파 전송</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-flow">
+            <h2>📊 데이터 전송 흐름 시각화</h2>
+            <div class="flow-animation">
+                <div class="flow-step">
+                    <h3>송신자</h3>
+                    <p>데이터 생성</p>
+                    <p style="font-size: 2em;">💻</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h3>계층별 처리</h3>
+                    <p>7 → 6 → 5 → 4 → 3 → 2 → 1</p>
+                    <p style="font-size: 2em;">📦</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h3>네트워크</h3>
+                    <p>물리적 전송</p>
+                    <p style="font-size: 2em;">🌐</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h3>계층별 처리</h3>
+                    <p>1 → 2 → 3 → 4 → 5 → 6 → 7</p>
+                    <p style="font-size: 2em;">📭</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h3>수신자</h3>
+                    <p>데이터 수신</p>
+                    <p style="font-size: 2em;">💻</p>
+                </div>
+            </div>
+            <button class="start-animation-btn" onclick="animateDataFlow()">🎬 데이터 전송 애니메이션 시작</button>
+        </div>
+    </div>
+
+    <script>
+        // Layer click event
+        const layers = document.querySelectorAll('.layer');
+        const infoContents = document.querySelectorAll('.info-content');
+
+        layers.forEach(layer => {
+            layer.addEventListener('click', () => {
+                // Remove active class from all layers
+                layers.forEach(l => l.classList.remove('active'));
+
+                // Add active class to clicked layer
+                layer.classList.add('active');
+
+                // Get layer number
+                const layerNum = layer.getAttribute('data-layer');
+
+                // Hide all info contents
+                infoContents.forEach(info => info.classList.remove('active'));
+
+                // Show selected layer info
+                document.getElementById(`info-${layerNum}`).classList.add('active');
+            });
+        });
+
+        // Data flow animation
+        function animateDataFlow() {
+            const flowSteps = document.querySelectorAll('.flow-step');
+            let delay = 0;
+
+            flowSteps.forEach((step, index) => {
+                setTimeout(() => {
+                    step.style.transform = 'scale(1.2)';
+                    step.style.boxShadow = '0 15px 40px rgba(102, 126, 234, 0.6)';
+
+                    setTimeout(() => {
+                        step.style.transform = 'scale(1)';
+                        step.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
+                    }, 500);
+                }, delay);
+
+                delay += 600;
+            });
+
+            // Show success message
+            setTimeout(() => {
+                alert('✅ 데이터가 성공적으로 전송되었습니다!\n\n각 계층을 거치며 데이터가 캡슐화되고, 수신 측에서는 역순으로 역캡슐화됩니다.');
+            }, delay);
+        }
+
+        // Auto-highlight layers on scroll
+        window.addEventListener('scroll', () => {
+            const scrollPos = window.scrollY;
+
+            if (scrollPos > 100 && scrollPos < 200) {
+                // Subtle effect on scroll
+            }
+        });
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            const activeLayers = document.querySelectorAll('.layer.active');
+
+            if (activeLayers.length > 0) {
+                const currentLayer = activeLayers[0];
+                const currentNum = parseInt(currentLayer.getAttribute('data-layer'));
+
+                if (e.key === 'ArrowUp' && currentNum < 7) {
+                    const nextLayer = document.querySelector(`[data-layer="${currentNum + 1}"]`);
+                    if (nextLayer) nextLayer.click();
+                } else if (e.key === 'ArrowDown' && currentNum > 1) {
+                    const prevLayer = document.querySelector(`[data-layer="${currentNum - 1}"]`);
+                    if (prevLayer) prevLayer.click();
+                }
+            }
+        });
+
+        // Add initial animation hint
+        setTimeout(() => {
+            const firstLayer = document.querySelector('[data-layer="7"]');
+            firstLayer.style.animation = 'pulse 1s ease-in-out 3';
+        }, 1000);
+    </script>
+</body>
+</html>
