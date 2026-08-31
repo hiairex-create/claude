@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쉽게 배우는 구조 패턴: 데코레이터와 어댑터</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin: 20px 0 10px 0;
+            font-size: 1.5em;
+        }
+
+        .pattern-simulator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .pattern-simulator {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .control-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .visualization {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.reset {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        button.topping {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .sandwich-layer {
+            width: 200px;
+            padding: 15px;
+            margin: 5px 0;
+            text-align: center;
+            border-radius: 10px;
+            font-weight: bold;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .bread {
+            background: #deb887;
+            color: #fff;
+        }
+
+        .lettuce {
+            background: #90ee90;
+            color: #333;
+        }
+
+        .cheese {
+            background: #ffd700;
+            color: #333;
+        }
+
+        .pickle {
+            background: #9acd32;
+            color: #fff;
+        }
+
+        .tomato {
+            background: #ff6347;
+            color: #fff;
+        }
+
+        .code-display {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .code-display .keyword {
+            color: #ff79c6;
+        }
+
+        .code-display .string {
+            color: #f1fa8c;
+        }
+
+        .code-display .comment {
+            color: #6272a4;
+        }
+
+        .animal-card {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .animal-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+        }
+
+        .animal-card.selected {
+            border-color: #764ba2;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .animal-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .output-box {
+            background: #e8f4f8;
+            border-left: 5px solid #667eea;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            min-height: 50px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .comparison-table tr:hover {
+            background: #e9ecef;
+        }
+
+        .intro-text {
+            line-height: 1.8;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .animals-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .adapter-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .adapter-box {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin: 10px;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+            margin: 0 10px;
+        }
+
+        .result-text {
+            font-size: 1.2em;
+            margin-top: 10px;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 쉽게 배우는 구조 패턴</h1>
+            <p>데코레이터와 어댑터 패턴을 직접 체험해보세요!</p>
+        </header>
+
+        <!-- 소개 섹션 -->
+        <div class="section">
+            <h2>📚 구조 패턴이란?</h2>
+            <p class="intro-text">
+                <span class="highlight">구조 패턴(Structural Pattern)</span>은 클래스나 객체들을 효율적이고 유연하게 조직하여
+                더 큰 구조를 만드는 방법을 제공하는 디자인 패턴입니다.
+                코드의 재사용성과 유연성을 높여주어 유지보수를 쉽게 만들어줍니다.
+            </p>
+        </div>
+
+        <!-- 데코레이터 패턴 섹션 -->
+        <div class="section">
+            <h2>🍔 데코레이터 패턴 (Decorator Pattern)</h2>
+            <p class="intro-text">
+                데코레이터 패턴은 객체에 <span class="highlight">새로운 기능을 추가</span>하고 싶을 때,
+                래퍼(wrapper) 객체로 감싸서 원래 객체에 동적으로 책임을 덧붙이는 패턴입니다.
+                상속으로 클래스를 늘리지 않고도 객체의 기능을 확장할 수 있습니다.
+            </p>
+
+            <h3>🥪 샌드위치 만들기 시뮬레이터</h3>
+            <p>토핑을 추가해서 나만의 샌드위치를 만들어보세요!</p>
+
+            <div class="pattern-simulator">
+                <div class="control-panel">
+                    <h4>토핑 선택</h4>
+                    <div class="button-group">
+                        <button class="topping" onclick="addTopping('lettuce', '🥬 양상추')">🥬 양상추</button>
+                        <button class="topping" onclick="addTopping('cheese', '🧀 치즈')">🧀 치즈</button>
+                        <button class="topping" onclick="addTopping('pickle', '🥒 피클')">🥒 피클</button>
+                        <button class="topping" onclick="addTopping('tomato', '🍅 토마토')">🍅 토마토</button>
+                    </div>
+                    <button class="reset" onclick="resetSandwich()">🔄 다시 만들기</button>
+
+                    <div class="code-display" id="decoratorCode">
+<span class="comment"># 기본 샌드위치</span>
+sandwich = Bread()
+<span class="comment"># 출력: "빵"</span></div>
+                </div>
+
+                <div class="visualization">
+                    <h4>내 샌드위치</h4>
+                    <div id="sandwichStack">
+                        <div class="sandwich-layer bread">🍞 빵</div>
+                    </div>
+                    <div class="output-box" id="sandwichOutput">
+                        출력: "빵"
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 어댑터 패턴 섹션 -->
+        <div class="section">
+            <h2>🔌 어댑터 패턴 (Adapter Pattern)</h2>
+            <p class="intro-text">
+                어댑터 패턴은 서로 맞지 않는 인터페이스를 지닌 객체들이 함께 동작할 수 있도록
+                <span class="highlight">중간에서 변환</span>을 해주는 구조 패턴입니다.
+                객체 A의 사용 방식을 객체 B가 기대하는 방식으로 "통역"해주는 역할을 합니다.
+            </p>
+
+            <h3>🐱🐶 동물 소리 어댑터 시뮬레이터</h3>
+            <p>어댑터를 사용해서 서로 다른 동물들의 울음소리를 통일된 방식으로 들어보세요!</p>
+
+            <div class="pattern-simulator">
+                <div class="control-panel">
+                    <h4>동물 선택</h4>
+                    <div class="animals-container">
+                        <div class="animal-card" onclick="selectAnimal('cat')">
+                            <div class="animal-icon">🐱</div>
+                            <div>고양이</div>
+                            <small>meow() 메서드</small>
+                        </div>
+                        <div class="animal-card" onclick="selectAnimal('dog')">
+                            <div class="animal-icon">🐶</div>
+                            <div>개</div>
+                            <small>bark() 메서드</small>
+                        </div>
+                        <div class="animal-card" onclick="selectAnimal('bird')">
+                            <div class="animal-icon">🐦</div>
+                            <div>새</div>
+                            <small>chirp() 메서드</small>
+                        </div>
+                    </div>
+
+                    <button onclick="makeSound()">🔊 소리내기 (make_sound)</button>
+
+                    <div class="code-display" id="adapterCode">
+<span class="comment"># 동물을 선택하세요</span>
+<span class="comment"># 어댑터가 통일된 인터페이스 제공</span></div>
+                </div>
+
+                <div class="visualization">
+                    <h4>어댑터 동작 과정</h4>
+                    <div class="adapter-flow" id="adapterFlow">
+                        <p>동물을 선택하고 소리내기 버튼을 눌러보세요!</p>
+                    </div>
+                    <div class="output-box" id="adapterOutput">
+                        출력: (동물을 선택하세요)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 비교 섹션 -->
+        <div class="section">
+            <h2>⚖️ 데코레이터 vs 어댑터</h2>
+            <p class="intro-text">
+                두 패턴 모두 객체를 감싼다는 공통점이 있지만, 목적과 기능이 다릅니다.
+            </p>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>구분</th>
+                        <th>데코레이터 패턴 🍔</th>
+                        <th>어댑터 패턴 🔌</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>목적</strong></td>
+                        <td>객체에 <strong>새로운 기능 추가</strong></td>
+                        <td>서로 다른 객체들을 <strong>인터페이스 변환으로 연결</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>인터페이스</strong></td>
+                        <td>원래 객체와 <strong>동일한 인터페이스</strong> 유지</td>
+                        <td>다른 인터페이스로 <strong>변환</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>중첩 사용</strong></td>
+                        <td>여러 개를 <strong>겹겹이 쌓아</strong> 적용 가능</td>
+                        <td>보통 <strong>한 번만</strong> 변환</td>
+                    </tr>
+                    <tr>
+                        <td><strong>예시</strong></td>
+                        <td>샌드위치에 토핑 추가하기</td>
+                        <td>전기 플러그 어댑터, 통역사</td>
+                    </tr>
+                    <tr>
+                        <td><strong>사용 시기</strong></td>
+                        <td>런타임에 동적으로 기능 추가가 필요할 때</td>
+                        <td>호환되지 않는 코드를 연결해야 할 때</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 요약 섹션 -->
+        <div class="section">
+            <h2>💡 핵심 요약</h2>
+            <div class="intro-text">
+                <p><strong>✅ 데코레이터 패턴:</strong></p>
+                <ul style="margin: 10px 0 20px 30px; line-height: 2;">
+                    <li>상속 없이 객체의 기능을 동적으로 확장</li>
+                    <li>인터페이스는 그대로, 내부 동작만 추가</li>
+                    <li>여러 데코레이터를 자유롭게 조합 가능</li>
+                </ul>
+
+                <p><strong>✅ 어댑터 패턴:</strong></p>
+                <ul style="margin: 10px 0 20px 30px; line-height: 2;">
+                    <li>서로 다른 인터페이스를 가진 객체들을 연결</li>
+                    <li>기존 코드 수정 없이 호환성 확보</li>
+                    <li>통역사나 변환기 역할</li>
+                </ul>
+
+                <p style="margin-top: 20px; padding: 20px; background: #e8f4f8; border-radius: 10px;">
+                    <strong>🎯 기억하세요:</strong>
+                    데코레이터는 <span class="highlight">"기능 추가"</span>,
+                    어댑터는 <span class="highlight">"인터페이스 변환"</span>!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 데코레이터 패턴: 샌드위치 시뮬레이터
+        let sandwichLayers = ['빵'];
+        const toppingNames = {
+            'lettuce': '양상추',
+            'cheese': '치즈',
+            'pickle': '피클',
+            'tomato': '토마토'
+        };
+
+        const toppingEmojis = {
+            'lettuce': '🥬',
+            'cheese': '🧀',
+            'pickle': '🥒',
+            'tomato': '🍅'
+        };
+
+        function addTopping(type, name) {
+            sandwichLayers.push(name);
+            updateSandwich();
+        }
+
+        function resetSandwich() {
+            sandwichLayers = ['빵'];
+            updateSandwich();
+        }
+
+        function updateSandwich() {
+            // 시각화 업데이트
+            const stack = document.getElementById('sandwichStack');
+            stack.innerHTML = '';
+
+            sandwichLayers.forEach((layer, index) => {
+                const div = document.createElement('div');
+                if (index === 0) {
+                    div.className = 'sandwich-layer bread';
+                    div.textContent = '🍞 ' + layer;
+                } else {
+                    const type = Object.keys(toppingNames).find(key =>
+                        toppingNames[key] === layer.replace(/🥬|🧀|🥒|🍅/g, '').trim()
+                    );
+                    div.className = 'sandwich-layer ' + type;
+                    div.textContent = layer;
+                }
+                stack.appendChild(div);
+            });
+
+            // 코드 업데이트
+            let code = '<span class="comment"># 기본 샌드위치</span>\n';
+            code += 'sandwich = Bread()\n';
+
+            sandwichLayers.slice(1).forEach(layer => {
+                const cleanName = layer.replace(/🥬|🧀|🥒|🍅/g, '').trim();
+                const type = Object.keys(toppingNames).find(key => toppingNames[key] === cleanName);
+                const className = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+                code += `sandwich = ${className}Decorator(sandwich)\n`;
+            });
+
+            code += '\n<span class="comment"># 최종 결과</span>\n';
+            code += 'print(sandwich.make())';
+
+            document.getElementById('decoratorCode').innerHTML = code;
+
+            // 출력 업데이트
+            const output = sandwichLayers.join(' + ');
+            document.getElementById('sandwichOutput').textContent = `출력: "${output}"`;
+        }
+
+        // 어댑터 패턴: 동물 소리 시뮬레이터
+        let selectedAnimal = null;
+
+        const animals = {
+            'cat': {
+                name: '고양이',
+                emoji: '🐱',
+                method: 'meow()',
+                sound: '야옹',
+                originalCode: 'cat = Cat()\ncat.meow()'
+            },
+            'dog': {
+                name: '개',
+                emoji: '🐶',
+                method: 'bark()',
+                sound: '멍멍',
+                originalCode: 'dog = Dog()\ndog.bark()'
+            },
+            'bird': {
+                name: '새',
+                emoji: '🐦',
+                method: 'chirp()',
+                sound: '짹짹',
+                originalCode: 'bird = Bird()\nbird.chirp()'
+            }
+        };
+
+        function selectAnimal(type) {
+            selectedAnimal = type;
+
+            // 선택된 카드 표시
+            document.querySelectorAll('.animal-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.animal-card').classList.add('selected');
+
+            // 코드 업데이트
+            const animal = animals[type];
+            const adapterName = animal.name.charAt(0).toUpperCase() + animal.name.slice(1);
+
+            let code = `<span class="comment"># 원래 방식 (인터페이스가 다름)</span>\n`;
+            code += `${animal.originalCode}\n\n`;
+            code += `<span class="comment"># 어댑터 사용 (통일된 인터페이스)</span>\n`;
+            code += `animal = ${adapterName}Adapter(${type})\n`;
+            code += `animal.make_sound()  <span class="comment"># 통일된 메서드</span>`;
+
+            document.getElementById('adapterCode').innerHTML = code;
+
+            // 흐름도 초기화
+            const flow = document.getElementById('adapterFlow');
+            flow.innerHTML = `
+                <div class="adapter-box">${animal.emoji} ${animal.name}<br><small>원본: ${animal.method}</small></div>
+                <div class="arrow">➡️</div>
+                <div class="adapter-box">🔌 어댑터<br><small>변환 중...</small></div>
+                <div class="arrow">➡️</div>
+                <div class="adapter-box">🔊 make_sound()<br><small>통일된 인터페이스</small></div>
+            `;
+
+            document.getElementById('adapterOutput').textContent = '출력: (소리내기 버튼을 누르세요)';
+        }
+
+        function makeSound() {
+            if (!selectedAnimal) {
+                alert('먼저 동물을 선택해주세요!');
+                return;
+            }
+
+            const animal = animals[selectedAnimal];
+
+            // 애니메이션 효과
+            const flow = document.getElementById('adapterFlow');
+            flow.style.animation = 'none';
+            setTimeout(() => {
+                flow.style.animation = 'fadeIn 0.5s ease-in';
+            }, 10);
+
+            // 결과 출력
+            document.getElementById('adapterOutput').innerHTML = `
+                <div style="font-size: 1.3em;">
+                    출력: "${animal.sound}" ${animal.emoji}
+                </div>
+                <div class="result-text" style="margin-top: 10px;">
+                    ✅ ${animal.method} → make_sound() 변환 성공!
+                </div>
+            `;
+        }
+
+        // 초기 로드
+        window.onload = function() {
+            updateSandwich();
+        };
+    </script>
+</body>
+</html>
